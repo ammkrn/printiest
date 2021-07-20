@@ -29,6 +29,8 @@ x <+> y -- concatenate x and y, with a space between
 x <n> y -- vertically concatenate x and y
 ```
 
+As well as the group operator, some helper functions around group, and some miscellaneous founctions like `hang`. Group is going to do most of the heavy lifting.
+
 The main ways in which this (and Prettiest) differs from something like a Wadler/Leijen style printer is that the `Group` node does more of the work for you (you can still force a node to render as a certain orientation if you want), and for docs > 1 line in height, concatenation is "tetris-like". For existing programs that depend on "classic" concatenation, you can still achieve the same results by changing the manner in which the doc is built up in your program.
 
 ## Future work
