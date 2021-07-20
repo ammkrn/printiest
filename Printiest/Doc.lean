@@ -130,8 +130,7 @@ def blank (n : Nat): String :=
   aux n ""
 
 def Doc.alwaysHang (indent : Nat) (upper : Doc) (lower : Doc) : Doc := 
-  let rhs := Doc.Concat (Doc.Text $ blank indent) lower
-  Concat (Flush upper) rhs
+  Doc.groupIndent #[(0, upper), (indent, lower)] " " (kind := GroupKind.vertical)
 
 /-
 Given `self` and `ys`, this will print bothon the same line

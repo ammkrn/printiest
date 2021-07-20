@@ -96,7 +96,6 @@ def gitOptions : List String :=
 def helpText := "'git help -a' and 'git help -g' list available subcommands and some concept guides. See 'git help <command>' or 'git help <concept>' to read about a specific subcommand or concept. See 'git help git' for an overview of the system."
 def gitCli := 
   let grp := group #["git" <+> groupText gitOptions, "<command>", "[<args>]"] " "
-  --(hang 4 "usage:" ("git" <+> groupText gitOptions)) 
   (hang 4 "usage:" grp)
   <n> Nil 
   <n> groupTextFromString helpText
