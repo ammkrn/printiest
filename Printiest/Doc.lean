@@ -162,10 +162,10 @@ def Doc.encloseSep (l : Doc) (docs: Array Doc) (sep: String) (r : Doc) (indent :
   match docs.get? docs.size.pred with
   | none => Doc.Concat l r
   | some last => 
-    let sub := (docs.toSubarray 0 docs.size.pred).toArray
-    let middle := sub.map (fun d => Doc.Concat d sep)
-    let inner := Doc.group (middle.push last) ""
-    Doc.groupIndent #[(0, l), (indent, inner), (0, r)] ""
+    let all_but_last := (docs.toSubarray 0 docs.size.pred).toArray
+    let withSeps := all_but_last.map (fun d => (indent, Doc.Concat d sep))
+    let contents := #[(0, l)] ++ withSeps ++ #[(indent, last), (0, r)]
+    Doc.groupIndent contents ""
 
 /-
 Calcualte the sizes/shapes of different possible outcomes.
