@@ -35,6 +35,8 @@ The main ways in which this (and Prettiest) differs from something like a Wadler
 
 ## Future work
 
++ Find a better way of handling text groups and tiling in general, as the current behavior is exponential in the input size. I have an implementation in mind that's worst-case exponential in the number of tokens that fit in the render width, which in practice would probably be fine when combined with pruning.
+
 + Adding an annotation system.
 
 + Figuring out what API/integration to offer for external code or document formatters.
