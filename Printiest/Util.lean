@@ -1,4 +1,4 @@
-      
+
 inductive Choice
 | H : Nat -> Choice
 | V : Nat -> Choice
@@ -14,7 +14,7 @@ def Choice.toString (c : Choice) : String :=
 instance : ToString Choice := ⟨Choice.toString⟩
 
 /-
-Side and Spaces are helper types to keep track of info during rendering; 
+Side and Spaces are helper types to keep track of info during rendering;
 we need these to allow for streaming output.
 
 Side keeps track of whether we're on the left or right side of a Concat
@@ -33,13 +33,13 @@ inductive Spaces
 | Hot : Nat -> Spaces
 | Cold : Nat -> Spaces
 
-instance : Inhabited Spaces := ⟨Spaces.Cold 0⟩ 
+instance : Inhabited Spaces := ⟨Spaces.Cold 0⟩
 
-def Spaces.toHot : Spaces -> Spaces 
+def Spaces.toHot : Spaces -> Spaces
 | Hot n => Hot n
 | Cold n => Hot n
 
-def Spaces.toCold : Spaces -> Spaces 
+def Spaces.toCold : Spaces -> Spaces
 | Hot n => Cold n
 | Cold n => Cold n
 
@@ -67,7 +67,7 @@ instance {A : Type} : Stream (RenderState A) Choice where
   | [] => none
   | hd :: tl => some (hd, { rs with choices := tl })
 
-def RenderState.new {A : Type} (a : A) (choices: List Choice) : RenderState A := 
+def RenderState.new {A : Type} (a : A) (choices: List Choice) : RenderState A :=
   ⟨a, choices, Left, Cold 0⟩
 
 instance : Inhabited (RenderState String) := ⟨RenderState.new "" []⟩
@@ -83,7 +83,7 @@ instance : HasWrite String Id := {
 }
 
 instance : HasWrite IO.FS.Stream IO := {
-  tell := 
+  tell :=
   fun s st => do
   st.sink.write s.toUTF8
   return ((), st)
