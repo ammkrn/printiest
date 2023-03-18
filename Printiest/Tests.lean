@@ -11,7 +11,7 @@ instance : Coe String Sexpr := ⟨Sexpr.atom⟩
 
 partial def Sexpr.pretty : Sexpr -> Doc
 | atom s => Doc.Text s
-| list es => 
+| list es =>
   let inner := Doc.group (es.map pretty) " "
   "(" <> inner <> ")"
 
@@ -26,9 +26,9 @@ def anSexpr : Sexpr := list #[
 ]
 
 -- The canonical "Prettiest" Sexpr demo
-#eval IO.Prim.getStdout >>= anSexpr.pretty.renderStream 15
-#eval IO.Prim.getStdout >>= anSexpr.pretty.renderStream 40
-#eval IO.Prim.getStdout >>= anSexpr.pretty.renderStream 80
+#eval IO.getStdout >>= anSexpr.pretty.renderStreamB 15
+#eval IO.getStdout >>= anSexpr.pretty.renderStreamB 40
+#eval IO.getStdout >>= anSexpr.pretty.renderStreamB 80
 
 def bigSexpr0 := list #[anSexpr, anSexpr, anSexpr, anSexpr]
 def bigSexpr1 := list #[bigSexpr0, bigSexpr0, bigSexpr0, bigSexpr0]
@@ -44,9 +44,9 @@ def bigSexprTest (w : Nat) := bigSexpr6.pretty.renderString w
 
 -- Demo of the groupText thing.
 def lorem := "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-#eval IO.Prim.getStdout >>= (groupTextFromString lorem).renderStream 20
-#eval IO.Prim.getStdout >>= (groupTextFromString lorem).renderStream 40
-#eval IO.Prim.getStdout >>= (groupTextFromString lorem).renderStream 80
+#eval IO.getStdout >>= (groupTextFromString lorem).renderStreamB 20
+#eval IO.getStdout >>= (groupTextFromString lorem).renderStreamB 40
+#eval IO.getStdout >>= (groupTextFromString lorem).renderStreamB 80
 
 namespace test1
 def L : Doc := "points:"
@@ -56,10 +56,10 @@ def R := Doc.group #["1. first point", "2. second point", "3. third point"] " "
 The two hang operators; "alwaysHang" and "hang", where the latter will only
 do hanging indentation if the given width can't fit everything on one line.
 -/
-#eval IO.Prim.getStdout >>= (hang 4 L R).renderStream 80
-#eval IO.Prim.getStdout >>= (hang 4 L R).renderStream 20
-#eval IO.Prim.getStdout >>= (alwaysHang 4 L R).renderStream 80
-#eval IO.Prim.getStdout >>= (alwaysHang 4 L R).renderStream 20
+#eval IO.getStdout >>= (hang 4 L R).renderStreamB 80
+#eval IO.getStdout >>= (hang 4 L R).renderStreamB 20
+#eval IO.getStdout >>= (alwaysHang 4 L R).renderStreamB 80
+#eval IO.getStdout >>= (alwaysHang 4 L R).renderStreamB 20
 end test1
 
 /-
@@ -94,10 +94,10 @@ def gitOptions : List String :=
 ]
 
 def helpText := "'git help -a' and 'git help -g' list available subcommands and some concept guides. See 'git help <command>' or 'git help <concept>' to read about a specific subcommand or concept. See 'git help git' for an overview of the system."
-def gitCli := 
+def gitCli :=
   let grp := group #["git" <+> groupText gitOptions, "<command>", "[<args>]"] " "
   (hang 4 "usage:" grp)
-  <n> Nil 
+  <n> Nil
   <n> groupTextFromString helpText
 
 /-
@@ -105,18 +105,17 @@ Recreates a portion of the `git --help` output showing the ability
 to render a CLI to best fit a given terminal width (ideally this would be
 read from the user's terminal and then printed accordingly).
 -/
-#eval IO.Prim.getStdout >>= gitCli.renderStream 80
-#eval IO.Prim.getStdout >>= gitCli.renderStream 40
-#eval IO.Prim.getStdout >>= gitCli.renderStream 20
+#eval IO.getStdout >>= gitCli.renderStreamB 80
+#eval IO.getStdout >>= gitCli.renderStreamB 40
+#eval IO.getStdout >>= gitCli.renderStreamB 20
 
 -- Demo of the helper function for creating a separated and surrounded list of items.
-#eval IO.Prim.getStdout >>= (Doc.encloseSep "{" (gitOptions.map (fun x => Doc.Text x)).toArray "," "}" 4).renderStream 40
+#eval IO.getStdout >>= (Doc.encloseSep "{" (gitOptions.map (fun x => Doc.Text x)).toArray "," "}" 4).renderStreamB 40
 
 -- Force a group to be horizontal
 def restrict_h := Doc.group (kind := GroupKind.horizontalCode) #["A", "B", "C"] ", "
-#eval IO.Prim.getStdout >>= restrict_h.renderStream 1
+#eval IO.getStdout >>= restrict_h.renderStreamB 1
 
 -- Force a group to be vertical
 def restrict_v := Doc.group (kind := GroupKind.vertical) #["A", "B", "C"] " "
-#eval IO.Prim.getStdout >>= restrict_v.renderStream 40
-
+#eval IO.getStdout >>= restrict_v.renderStreamB 40

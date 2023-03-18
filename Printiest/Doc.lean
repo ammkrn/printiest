@@ -13,8 +13,8 @@ but this will have some impact performance since we potentially have 3 branches 
 dimensions) meaning the alternative won't be considered, but there will be outliers.
 
 The main issue is that the horizontal layout scheme originally implemented in `Prettiest` doesn't
-lay out blocks of human-language text well, because it wants all the leading elements to be 
-non-zero height, and allows the LAST one to be non-zero, then does a fold right, so we can have 
+lay out blocks of human-language text well, because it wants all the leading elements to be
+non-zero height, and allows the LAST one to be non-zero, then does a fold right, so we can have
 things that hang/indent nicely, like:
 ```
 a b c d e f
@@ -34,10 +34,10 @@ nostrud exercitation ullamco laboris
 nisi ut aliquip ex ea commodo consequat.
 ```
 
-Here, if we began with a "first" element of 
+Here, if we began with a "first" element of
 ```
 Lorem ipsum dolor sit amet, consectetur
-adipiscing elit, 
+adipiscing elit,
 ```
 and a second element of `sed`, we want 'sed' to be "tetris'd" into the
 rest of the block if we began by wanting the whole thing to be grouped.
@@ -72,14 +72,14 @@ inductive Doc
 | Group (ds: Array (Nat × Doc)) (sep: String) (kind: GroupKind) : Doc
 
 instance : Inhabited Doc := ⟨Doc.Nil⟩
-instance : Coe String Doc := ⟨Doc.Text⟩ 
+instance : Coe String Doc := ⟨Doc.Text⟩
 
 def Doc.vConcat (l r : Doc) : Doc := Doc.Concat (Flush l) r
 
 infixl:65 " <> "  => Doc.Concat
 -- Concatenate d1 and d2, putting a single space between them.
 infixl:65 " <+> " => fun d1 d2 => d1 <> Doc.Text " " <> d2
-/- 
+/-
 Concatenate d1 and d2 vertically:
 d1
 d2
@@ -88,23 +88,23 @@ infixl:65 " <n> " => fun d1 d2 => Doc.vConcat d1 d2
 
 /-
 The default group style is `normal`. Generally if you're grouping a block of text
-you want to use groupText to make it look nice, which is different enough that 
+you want to use groupText to make it look nice, which is different enough that
 it has a slightly different name.
 
 You can limit it to `horizontal` or `vertical` if you KNOW you want to restrict
-the rendering to a certain look, or if you're concerned about performance for 
+the rendering to a certain look, or if you're concerned about performance for
 either extremely large or degenerate Docs.
 -/
-def Doc.group 
-  (docs : Array Doc) 
-  (sep : String) 
-  (kind : GroupKind := GroupKind.normal) : Doc := 
+def Doc.group
+  (docs : Array Doc)
+  (sep : String)
+  (kind : GroupKind := GroupKind.normal) : Doc :=
   Group (docs.map $ fun x => (0, x)) sep kind
 
-def Doc.groupIndent 
-  (docs : Array (Nat × Doc)) 
-  (sep : String) 
-  (kind : GroupKind := GroupKind.normal) : Doc := 
+def Doc.groupIndent
+  (docs : Array (Nat × Doc))
+  (sep : String)
+  (kind : GroupKind := GroupKind.normal) : Doc :=
   Group docs sep kind
 
 /-
@@ -113,7 +113,7 @@ For creating blocks of text.
 def Doc.groupText (l: List String) : Doc :=
   match l with
   | [] => Doc.Nil
-  | hd :: tl => 
+  | hd :: tl =>
   let base := Doc.Text hd
   tl.foldl (fun sink next => Doc.Group #[(0, sink), (0, Doc.Text next)] " " GroupKind.text) base
 
@@ -129,7 +129,7 @@ def blank (n : Nat): String :=
     | (n+1) => aux n (acc ++ " ")
   aux n ""
 
-def Doc.alwaysHang (indent : Nat) (upper : Doc) (lower : Doc) : Doc := 
+def Doc.alwaysHang (indent : Nat) (upper : Doc) (lower : Doc) : Doc :=
   Doc.groupIndent #[(0, upper), (indent, lower)] " " (kind := GroupKind.vertical)
 
 /-
@@ -145,7 +145,7 @@ WARNING: This will probably not look good if the RHS is a group.
       ys2
 ```
 -/
-def Doc.hang (indent : Nat) (upper : Doc) (lower : Doc) (sep : String := " ") : Doc := 
+def Doc.hang (indent : Nat) (upper : Doc) (lower : Doc) (sep : String := " ") : Doc :=
   Doc.groupIndent #[(0, upper), (indent, lower)] sep
 
 /-
@@ -161,7 +161,7 @@ Make IE
 def Doc.encloseSep (l : Doc) (docs: Array Doc) (sep: String) (r : Doc) (indent : Nat) : Doc :=
   match docs.get? docs.size.pred with
   | none => Doc.Concat l r
-  | some last => 
+  | some last =>
     let all_but_last := (docs.toSubarray 0 docs.size.pred).toArray
     let withSeps := all_but_last.map (fun d => (indent, Doc.Concat d sep))
     let contents := #[(0, l)] ++ withSeps ++ #[(indent, last), (0, r)]
@@ -173,29 +173,29 @@ Calcualte the sizes/shapes of different possible outcomes.
 Ideally this would measure strings based on unicode graphemes instead
 of length, but for now we're working with what we have.
 -/
-partial def Doc.measure (w : Nat) : Doc -> Array Measure
+partial def Doc.measure (w : Nat) : Doc -> Array Measure'
 | Nil => #[Inhabited.default]
-| Text t => #[Measure.text t]
-| Concat l r => 
+| Text t => #[Measure'.text t]
+| Concat l r =>
   let ls := l.measure w
   let rs := r.measure w
-  pareto w $ flatCartesian Measure.concat ls rs
+  pareto w $ flatCartesian Measure'.concat ls rs
 
-| Flush d => pareto w $ (d.measure w).map Measure.flush
-| Group ds sep kind => 
+| Flush d => pareto w $ (d.measure w).map Measure'.flush
+| Group ds sep kind =>
   let inner := ds.map (fun (indent, d) => (indent, d.measure w))
-  let sep := Measure.text sep
+  let sep := Measure'.text sep
   let horizontal := if kind.land GroupKind.horizontalCode != 0 then measureH inner w sep else #[]
   let text := if kind.land GroupKind.horizontalText != 0 then measureT inner w sep else #[]
   let vertical := if kind.land GroupKind.vertical != 0 then measureV inner w else #[]
   pareto w $ horizontal ++ text ++ vertical
 
 partial def Doc.renderAux
-  {m : Type -> Type} 
-  [inst1: Monad m] 
-  [Inhabited (m (RenderState σ))] 
+  {m : Type -> Type}
+  [inst1: Monad m]
+  [Inhabited (m (RenderState σ))]
   [HasWrite σ m]
-  (w : Nat) 
+  (w : Nat)
   : Doc -> StateT (RenderState σ) m Unit
 | Nil => return
 | Text txt => do
@@ -205,7 +205,7 @@ partial def Doc.renderAux
   HasWrite.tell blank
   HasWrite.tell txt
   modify $ fun s' => { s' with spaces := Cold (txt.length + s'.spaces.toNat)}
- 
+
 | Concat l r => do
   fun s => l.renderAux w { s with side := Left }
   fun s => r.renderAux w { s with side := Right }
@@ -219,12 +219,12 @@ partial def Doc.renderAux
   | Left => modify $ fun s' => { s' with spaces := s0.spaces.toHot }
   | Right => modify fun s' => { s' with spaces := Hot 0 }
 
-| Group ds sep kind => do
+| Group ds sep _kind => do
   let s0 <- get
   let mut diffs_total := 0
   let mut iterations : Nat := 0
 
-  let last <- modifyGet $ fun s => 
+  let last <- modifyGet $ fun s =>
     match s.choices with
     | [] => (Choice.V 0, s0)
     | hd :: tl => (hd, { s with choices := tl })
@@ -235,13 +235,13 @@ partial def Doc.renderAux
         let ind_num := if iterations + 1 = ds.size then s0.spaces.toNat + diffs_total else s0.spaces.toNat
         let ind := if (<- get).spaces.isHot then Hot ind_num else Cold ind_num
         fun s => d.renderAux w { s with side := s0.side, spaces := ind }
-        if iterations + 1 != ds.size then 
+        if iterations + 1 != ds.size then
             diffs_total := (diffs_total + sep.length + (<- get).spaces.toNat) - ind.toNat
             HasWrite.tell sep
         iterations := iterations + 1
       modify $ fun s => { s with spaces := Cold (lw + s0.spaces.toNat) }
 
-  | Choice.V lw => 
+  | Choice.V lw =>
         for (local_ind, d) in ds do
           let ind_num := s0.spaces.toNat + local_ind
           let ind := if iterations = 0 && (<- get).spaces.isCold then Cold ind_num else Hot ind_num
@@ -260,20 +260,50 @@ partial def Doc.renderAux
         modify $ fun state => { state with spaces := s0.spaces.toCold }
 
 /-
+
+TODO: Figure out how to remove copy-pasta
+
+def Doc.prepareRenderState (doc : Doc) (width: Nat) (stream : σ) : RenderState σ := Id.run $ do
+  let sils := doc.measure width
+  let hd := sils.get! 0
+  let choices := hd.choices.toList
+  RenderState.new stream choices
+
+def Doc.renderAux'
+  {m : Type -> Type}
+  [inst1: Monad m]
+  [Inhabited (m (RenderState σ))]
+  [HasWrite σ m]
+  (width : Nat) (stream : σ) (doc : Doc)
+  : StateT (RenderState σ) m (Unit × RenderState σ) := do
+    let rs := doc.prepareRenderState width stream
+    -- ...
+-/
+
+
+/-
 Render a Doc with the given width directly to a stream.
 I'm not sure how Lean handles writing to a stream internally; I know in Rust there are
 performance issues without buffered writers
 -/
-def Doc.renderStream (doc : Doc) (width: Nat) (stream: IO.FS.Stream) : IO Unit := do 
-let sils := doc.measure width
-let hd := sils.get! 0
-let choices := hd.choices.toList
-let _ <- doc.renderAux width (RenderState.new stream choices)
+def Doc.renderStream (doc : Doc) (width: Nat) (stream: IO.FS.Stream) : IO Unit := do
+  let sils := doc.measure width
+  let hd := sils.get! 0
+  let choices := hd.choices.toList
+  let _ ← doc.renderAux width (RenderState.new stream choices)
+  pure ()
+
+def Doc.renderStreamB (doc : Doc) (width: Nat) (stream: IO.FS.Stream) : BaseIO Unit := do
+  let sils := doc.measure width
+  let hd := sils.get! 0
+  let choices := hd.choices.toList
+  let _ ← ((doc.renderAux width (RenderState.new stream choices)) |> EIO.toBaseIO : BaseIO (Except IO.Error (Unit × RenderState IO.FS.Stream)))
+  pure ()
 
 /-
 Render a Doc with the given width into a string accumulator.
 -/
-def Doc.renderString (doc : Doc) (width: Nat) : String := do 
+def Doc.renderString (doc : Doc) (width: Nat) : String := Id.run $ do
 let sils := doc.measure width
 let hd := sils.get! 0
 let choices := hd.choices.toList

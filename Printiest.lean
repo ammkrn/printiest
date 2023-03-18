@@ -1,4 +1,4 @@
 import Printiest.Tests
 
-def main : IO Unit :=   
-  IO.Prim.getStdout >>= bigSexpr2.pretty.renderStream 80
+def main : IO Unit := do
+  (IO.getStdout >>= bigSexpr2.pretty.renderStreamB 80) |>.toIO
